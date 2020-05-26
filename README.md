@@ -19,10 +19,13 @@ module "key-vault" {
   storage_account_id         = module.hub-spoke-network.storage_account_id
   eventhub_name              = module.hub-spoke-network.eventhub_name
 
-  # Access polices enable to other resources, AD users and AD groups.
-  enabled_for_deployment          = "true"
-  enabled_for_disk_encryption     = "true"
+  #specify whether Azure Virtual Machines are permitted to retrieve certificates stored as secrets from the key vault
+  enabled_for_deployment = "true"
+  #specify whether Azure Disk Encryption is permitted to retrieve secrets from the vault and unwrap keys
+  enabled_for_disk_encryption = "true"
+  #specify whether Azure Resource Manager is permitted to retrieve secrets from the key vault
   enabled_for_template_deployment = "true"
+  
   access_policies = [
     {
       # Access policies for users, you can provide list of Azure AD users and set permissions.
@@ -58,7 +61,7 @@ module "key-vault" {
 
 ## Configure Azure Key Vault firewalls and virtual networks
 
-Azure Key Vault firewalls and virtual networks to restrict access to your key vault. The virtual network service endpoints for Key Vault) allow you to restrict access to a specified virtual network and set of IPv4 (internet protocol version 4) address ranges.
+Configure Azure Key Vault firewalls and virtual networks to restrict access to the key vault. The virtual network service endpoints for Key Vault (Microsoft.KeyVault) allow you to restrict access to a specified virtual network and set of IPv4 address ranges.
 
 Default action is set to `Deny` when no network rules matched. A `virtual_network_subnet_ids` or `ip_rules` can be added to `network_acls` block to allow request that is not Azure Services.
 
