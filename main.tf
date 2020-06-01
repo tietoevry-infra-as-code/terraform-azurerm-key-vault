@@ -95,16 +95,18 @@ data "azurerm_resource_group" "rg" {
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "main" {
-  name                            = format("%s-kv", lower(var.key_vault_name))
+  name                            = lower("kv-${var.project_name}-${var.subscription_type}")
   location                        = data.azurerm_resource_group.rg.location
   resource_group_name             = data.azurerm_resource_group.rg.name
   tenant_id                       = data.azurerm_client_config.current.tenant_id
-  sku_name                        = var.sku_pricing_tier
+  sku_name                        = var.key_vault_sku_pricing_tier
   enabled_for_deployment          = var.enabled_for_deployment
   enabled_for_disk_encryption     = var.enabled_for_disk_encryption
   enabled_for_template_deployment = var.enabled_for_template_deployment
+  soft_delete_enabled             = var.enable_soft_delete
+  purge_protection_enabled        = var.enable_purge_protection
 
-  tags = merge({ "Name" = format("%s-kv", lower(var.key_vault_name)) }, var.tags, )
+  tags = merge({ "ResourceName" = lower("kv-${var.project_name}-${var.subscription_type}") }, var.tags, )
 
   dynamic "network_acls" {
     for_each = var.network_acls != null ? [true] : []
@@ -140,10 +142,23 @@ resource "azurerm_key_vault" "main" {
   }
 }
 
+resource "random_password" "passwd" {
+  for_each    = var.secrets
+  length      = 24
+  min_upper   = 4
+  min_lower   = 2
+  min_numeric = 4
+  min_special = 4
+
+  keepers = {
+    name = each.key
+  }
+}
+
 resource "azurerm_key_vault_secret" "keys" {
   for_each     = var.secrets
   name         = each.key
-  value        = each.value
+  value        = each.value != "" ? each.value : random_password.passwd[each.key].result
   key_vault_id = azurerm_key_vault.main.id
 }
 
@@ -159,7 +174,7 @@ resource "azurerm_monitor_diagnostic_setting" "diag" {
     category = "AuditEvent"
     retention_policy {
       enabled = true
-      days    = var.logs_retention_in_days
+      days    = var.azure_monitor_logs_retention_in_days
     }
   }
 
@@ -167,7 +182,7 @@ resource "azurerm_monitor_diagnostic_setting" "diag" {
     category = "AllMetrics"
     retention_policy {
       enabled = true
-      days    = var.logs_retention_in_days
+      days    = var.azure_monitor_logs_retention_in_days
     }
   }
 }

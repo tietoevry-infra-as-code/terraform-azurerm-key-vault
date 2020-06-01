@@ -3,12 +3,22 @@ variable "resource_group_name" {
   default     = ""
 }
 
-variable "key_vault_name" {
-  description = "the name of the Key valut"
+variable "project_name" {
+  description = "The name of the project."
   default     = ""
 }
 
-variable "sku_pricing_tier" {
+variable "subscription_type" {
+  description = "Summary description of the purpose of the subscription that contains the resource. Often broken down by deployment environment type or specific workloads"
+  default     = ""
+}
+
+variable "environment" {
+  description = "The stage of the development lifecycle for the workload that the resource supports"
+  default     = ""
+}
+
+variable "key_vault_sku_pricing_tier" {
   description = "The name of the SKU used for the Key Vault. The options are: `standard`, `premium`."
   default     = "standard"
 }
@@ -25,6 +35,16 @@ variable "enabled_for_disk_encryption" {
 
 variable "enabled_for_template_deployment" {
   description = "Allow Resource Manager to retrieve secrets from the key vault."
+  default     = false
+}
+
+variable "enable_soft_delete" {
+  description = " Should Soft Delete be enabled for this Key Vault?"
+  default     = false
+}
+
+variable "enable_purge_protection" {
+  description = "Is Purge Protection enabled for this Key Vault?"
   default     = false
 }
 
@@ -50,9 +70,9 @@ variable "log_analytics_workspace_id" {
   default     = null
 }
 
-variable "logs_retention_in_days" {
-  description = "The workspace data retention in days. Possible values range between 30 and 730."
-  default     = "30"
+variable "azure_monitor_logs_retention_in_days" {
+  description = "The Azure Monitoring data retention in days."
+  default     = 30
 }
 
 variable "storage_account_id" {
