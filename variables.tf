@@ -25,17 +25,17 @@ variable "key_vault_sku_pricing_tier" {
 
 variable "enabled_for_deployment" {
   description = "Allow Virtual Machines to retrieve certificates stored as secrets from the key vault."
-  default     = false
+  default     = true
 }
 
 variable "enabled_for_disk_encryption" {
   description = "Allow Disk Encryption to retrieve secrets from the vault and unwrap keys."
-  default     = false
+  default     = true
 }
 
 variable "enabled_for_template_deployment" {
   description = "Allow Resource Manager to retrieve secrets from the key vault."
-  default     = false
+  default     = true
 }
 
 variable "enable_soft_delete" {
@@ -77,11 +77,6 @@ variable "azure_monitor_logs_retention_in_days" {
 
 variable "storage_account_id" {
   description = "The name of the storage account to store the all monitoring logs"
-  default     = null
-}
-
-variable "eventhub_name" {
-  description = "The name of eventhub"
   default     = null
 }
 

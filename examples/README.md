@@ -1,36 +1,27 @@
 # Azure Key Vault Terraform Module
 
-Terraform Module to create a Key Vault also adds required access policies for AD users and groups. This module also sends all logs to log analytic workspace and storage. 
+Terraform Module to create a Key Vault also adds required access policies for AD users and groups. This module also sends all logs to log analytic workspace and storage.
 
 ## Module Usage
 
-```
+```hcl
 module "key-vault" {
   source = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v1.1.0"
 
   # Resource Group and Key Vault pricing tier details
-  resource_group_name        = "rg-tieto-internal-shared-westeurope-002"
+  resource_group_name        = "rg-tieto-internal-shared-westeurope-001"
   key_vault_sku_pricing_tier = "premium"
 
   # (Required) Project_Name, Subscription_type and environment are must to create resource names.
-  # Project name length should be `15` and contian Alphanumerics and hyphens only. 
+  # Project name length should be `15` and contian Alphanumerics and hyphens only.
   project_name      = "tieto-internal"
   subscription_type = "shared"
   environment       = "dev"
 
   # Adding Key valut logs to Azure monitoring and Log Analytics space
-  log_analytics_workspace_id           = module.hub-spoke-network.log_analytics_workspace_id
-  azure_monitor_logs_retention_in_days = 30
-  storage_account_id                   = module.hub-spoke-network.storage_account_id
-
-  #specify whether Azure Virtual Machines are permitted to retrieve certificates stored as secrets from the key vault
-  enabled_for_deployment = "true"
-
-  #specify whether Azure Disk Encryption is permitted to retrieve secrets from the vault and unwrap keys
-  enabled_for_disk_encryption = "true"
-
-  #specify whether Azure Resource Manager is permitted to retrieve secrets from the key vault
-  enabled_for_template_deployment = "true"
+  log_analytics_workspace_id           = var.log_analytics_workspace_id
+  azure_monitor_logs_retention_in_days = var.azure_monitor_logs_retention_in_days
+  storage_account_id                   = var.storage_account_id
 
   # Once `Purge Protection` has been Enabled it's not possible to Disable it
   # Deleting the Key Vault with `Purge Protection` enabled will schedule the Key Vault to be deleted (currently 90 days)
@@ -57,15 +48,15 @@ module "key-vault" {
   ]
 
   # Create a required Secrets as per your need.
-  # When you Add `usernames` with empty password this module creates a strong random password 
-  # use .tfvars file to manage the secrets as variables to avoid security issues. 
+  # When you Add `usernames` with empty password this module creates a strong random password
+  # use .tfvars file to manage the secrets as variables to avoid security issues.
   secrets = {
     "message" = "Hello, world!"
     "vmpass"  = ""
   }
 
   # Adding TAG's to your Azure resources (Required)
-  # ProjectName and Env are already declared above, to use them here or create a varible. 
+  # ProjectName and Env are already declared above, to use them here or create a varible.
   tags = {
     ProjectName  = "tieto-internal"
     Env          = "dev"
@@ -80,10 +71,12 @@ module "key-vault" {
 
 To run this example you need to execute following Terraform commands
 
-```
-$ terraform init
-$ terraform plan
-$ terraform apply
+```hcl
+terraform init
+
+terraform plan
+
+terraform apply
 ```
 
 Run `terraform destroy` when you don't need these resources.

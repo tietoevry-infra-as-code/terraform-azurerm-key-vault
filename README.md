@@ -1,36 +1,27 @@
 # Azure Key Vault Terraform Module
 
-Terraform Module to create a Key Vault also adds required access policies for AD users and groups. This module also sends all logs to log analytic workspace and storage. 
+Terraform Module to create a Key Vault also adds required access policies for AD users and groups. This module also sends all logs to log analytic workspace and storage.
 
 ## Module Usage
 
-```
+```hcl
 module "key-vault" {
   source = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v1.1.0"
 
   # Resource Group and Key Vault pricing tier details
-  resource_group_name        = "rg-tieto-internal-shared-westeurope-002"
+  resource_group_name        = "rg-tieto-internal-shared-westeurope-001"
   key_vault_sku_pricing_tier = "premium"
 
   # (Required) Project_Name, Subscription_type and environment are must to create resource names.
-  # Project name length should be `15` and contian Alphanumerics and hyphens only. 
+  # Project name length should be `15` and contian Alphanumerics and hyphens only.
   project_name      = "tieto-internal"
   subscription_type = "shared"
   environment       = "dev"
 
   # Adding Key valut logs to Azure monitoring and Log Analytics space
-  log_analytics_workspace_id           = module.hub-spoke-network.log_analytics_workspace_id
-  azure_monitor_logs_retention_in_days = 30
-  storage_account_id                   = module.hub-spoke-network.storage_account_id
-
-  #specify whether Azure Virtual Machines are permitted to retrieve certificates stored as secrets from the key vault
-  enabled_for_deployment = "true"
-
-  #specify whether Azure Disk Encryption is permitted to retrieve secrets from the vault and unwrap keys
-  enabled_for_disk_encryption = "true"
-
-  #specify whether Azure Resource Manager is permitted to retrieve secrets from the key vault
-  enabled_for_template_deployment = "true"
+  log_analytics_workspace_id           = var.log_analytics_workspace_id
+  azure_monitor_logs_retention_in_days = var.azure_monitor_logs_retention_in_days
+  storage_account_id                   = var.storage_account_id
 
   # Once `Purge Protection` has been Enabled it's not possible to Disable it
   # Deleting the Key Vault with `Purge Protection` enabled will schedule the Key Vault to be deleted (currently 90 days)
@@ -57,15 +48,15 @@ module "key-vault" {
   ]
 
   # Create a required Secrets as per your need.
-  # When you Add `usernames` with empty password this module creates a strong random password 
-  # use .tfvars file to manage the secrets as variables to avoid security issues. 
+  # When you Add `usernames` with empty password this module creates a strong random password
+  # use .tfvars file to manage the secrets as variables to avoid security issues.
   secrets = {
     "message" = "Hello, world!"
     "vmpass"  = ""
   }
 
   # Adding TAG's to your Azure resources (Required)
-  # ProjectName and Env are already declared above, to use them here or create a varible. 
+  # ProjectName and Env are already declared above, to use them here or create a varible.
   tags = {
     ProjectName  = "tieto-internal"
     Env          = "dev"
@@ -82,7 +73,7 @@ Configure Azure Key Vault firewalls and virtual networks to restrict access to t
 
 Default action is set to `Deny` when no network rules matched. A `virtual_network_subnet_ids` or `ip_rules` can be added to `network_acls` block to allow request that is not Azure Services.
 
-``` 
+```hcl
 module "key-vault" {
   source = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v1.1.0"
 
@@ -100,35 +91,66 @@ module "key-vault" {
 }
 ```
 
+## Key Vault Advanced Access Policies
+
+### `enabled_for_deployment`
+
+To use Key Vault with Azure Resource Manager virtual machines, the `enabled_for_deployment` property on Key Vault must be set to `true`. This access is enabled by default for this module. Incase you want to disable it set the argument `enabled_for_deployment = "false"`.
+
+### `enabled_for_disk_encryption`
+
+We can configure Azure Disk Encryption to use Azure Key Vault to control and manage disk encryption keys and secrets. This access is enabled by default for this module. Incase you want to disable it set the argument `enabled_for_disk_encryption = "false"`.
+
+> Warning: The key vault and VMs must be in the same subscription. Also, to ensure that encryption secrets don't cross regional boundaries, Azure Disk Encryption requires the Key Vault and the VMs to be co-located in the same region. Create and use a Key Vault that is in the same subscription and region as the VMs to be encrypted.
+
+### `enabled_for_template_deployment`
+
+When you need to pass a secure value (like a password) as a parameter during deployment, you can retrieve the value from an Azure Key Vault. To access the Key Vault when deploying Managed Applications, you must grant access to the Appliance Resource Provider service principal. This access is enabled by default for this module. Incase you want to disable it set the argument `enabled_for_template_deployment = "false"`.
+
+## Soft Delete and Purge Protection
+
+When soft-delete is enabled, resources marked as deleted resources are retained for a specified period (90 days by default). The service further provides a mechanism for recovering the deleted object, essentially undoing the deletion.
+
+When creating a new key vault, soft-delete is enabled by default. You can create a key vault without soft-delete through this module by setting the argument `enable_soft_delete = false`. Once soft-delete is enabled on a key vault it cannot be disabled.
+
+Purge protection is an optional Key Vault behavior and is not enabled by default. Purge protection can only be enabled once soft-delete is enabled. It can be turned on using this module by setting the argument `enable_purge_protection = true`.
+
+When purge protection is on, a vault or an object in the deleted state cannot be purged until the retention period has passed. Soft-deleted vaults and objects can still be recovered, ensuring that the retention policy will be followed.
+
+> The default retention period is 90 days for the soft-delete and the purge protection retention policy uses the same interval. Once set, the retention policy interval cannot be changed.
+
 ## Recommended naming and tagging conventions
+
 Well-defined naming and metadata tagging conventions help to quickly locate and manage resources. These conventions also help associate cloud usage costs with business teams via chargeback and show back accounting mechanisms.
 
-> ### Resource naming 
+> ### Resource naming
+
 An effective naming convention assembles resource names by using important resource information as parts of a resource's name. For example, using these [recommended naming conventions](https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/naming-and-tagging#example-names), a public IP resource for a production SharePoint workload is named like this: `pip-sharepoint-prod-westus-001`.
 
 > ### Metadata tags
+
 When applying metadata tags to the cloud resources, you can include information about those assets that couldn't be included in the resource name. You can use that information to perform more sophisticated filtering and reporting on resources. This information can be used by IT or business teams to find resources or generate reports about resource usage and billing.
 
 The following list provides the recommended common tags that capture important context and information about resources. Use this list as a starting point to establish your tagging conventions.
 
-Tag Name|Description|Key|Example Value|Required?
---------|-----------|---|-------------|---------|
+Tag Name|Description|Key|ExampleValue|Required?
+--------|-----------|---|------------|---------|
 Project Name|Name of the Project for the infra is created. This is mandatory to create a resource names.|ProjectName|{Project name}|Yes
 Application Name|Name of the application, service, or workload the resource is associated with.|ApplicationName|{app name}|Yes
-Approver|Name	Person responsible for approving costs related to this resource.|Approver|{email}|Yes
+Approver|Name Person responsible for approving costs related to this resource.|Approver|{email}|Yes
 Business Unit|Top-level division of your company that owns the subscription or workload the resource belongs to. In smaller organizations, this may represent a single corporate or shared top-level organizational element.|BusinessUnit|FINANCE, MARKETING,{Product Name},CORP,SHARED|Yes
 Cost Center|Accounting cost center associated with this resource.|CostCenter|{number}|Yes
 Disaster Recovery|Business criticality of this application, workload, or service.|DR|Mission Critical, Critical, Essential|Yes
-End Date of the Project|Date when this application, workload, or service is planned to be retired.|EndDate|{date}|No
 Environment|Deployment environment of this application, workload, or service.|Env|Prod, Dev, QA, Stage, Test|Yes
 Owner Name|Owner of the application, workload, or service.|Owner|{email}|Yes
-Requester Name|User that requested the creation of this application.|Requestor|	{email}|Yes
+Requester Name|User that requested the creation of this application.|Requestor| {email}|Yes
 Service Class|Service Level Agreement level of this application, workload, or service.|ServiceClass|Dev, Bronze, Silver, Gold|Yes
 Start Date of the project|Date when this application, workload, or service was first deployed.|StartDate|{date}|No
+End Date of the Project|Date when this application, workload, or service is planned to be retired.|EndDate|{date}|No
 
-> This module allows you to manage the above metadata tags directly or as a variable using `variables.tf`. All Azure resources which support tagging can be tagged by specifying key-values in argument `tags`. Tag `ResourceName` is added automatically to all resources. 
+> This module allows you to manage the above metadata tags directly or as a variable using `variables.tf`. All Azure resources which support tagging can be tagged by specifying key-values in argument `tags`. Tag `ResourceName` is added automatically on all resources.
 
-```
+```hcl
 module "key-vault" {
   source = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v1.1.0"
   create_resource_group   = false
@@ -136,13 +158,13 @@ module "key-vault" {
   # ... omitted
 
   tags = {
-    ProjectName  = "PublicCloud"
+    ProjectName  = "tieto-internal"
     Env          = "dev"
     Owner        = "user@example.com"
     BusinessUnit = "CORP"
     ServiceClass = "Gold"
   }
-}
+}  
 ```
 
 ## Inputs
