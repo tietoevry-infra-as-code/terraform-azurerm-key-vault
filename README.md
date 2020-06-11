@@ -1,6 +1,8 @@
 # Azure Key Vault Terraform Module
 
-Terraform Module to create a Key Vault also adds required access policies for AD users and groups. This module also sends all logs to log analytic workspace and storage.
+Azure Key Vault is a tool for securely storing and accessing secrets. A secret is anything that you want to tightly control access to, such as API keys, passwords, or certificates. A vault is a logical group of secrets.
+
+This Terraform Module creates a Key Vault also adds required access policies for AD users and groups. This also sends all logs to log analytic workspace and storage.
 
 ## Module Usage
 
@@ -83,7 +85,7 @@ module "key-vault" {
     bypass                     = "AzureServices"
     default_action             = "Deny"
     ip_rules                   = ["123.201.18.148"]  # One or more IP Addresses, or CIDR Blocks to access this Key Vault.
-    virtual_network_subnet_ids = ["10.1.1.0/24", "10.1.2.0/24", "10.1.3.0/24"] # One or more Subnet ID's to access this Key Vault.
+    virtual_network_subnet_ids = [] # One or more Subnet ID's to access this Key Vault.
   }
   
 # ....omitted
@@ -133,8 +135,8 @@ When applying metadata tags to the cloud resources, you can include information 
 
 The following list provides the recommended common tags that capture important context and information about resources. Use this list as a starting point to establish your tagging conventions.
 
-Tag Name|Description|Key|ExampleValue|Required?
---------|-----------|---|------------|---------|
+Tag Name|Description|Key|Example Value|Required?
+--------|-----------|---|-------------|---------|
 Project Name|Name of the Project for the infra is created. This is mandatory to create a resource names.|ProjectName|{Project name}|Yes
 Application Name|Name of the application, service, or workload the resource is associated with.|ApplicationName|{app name}|Yes
 Approver|Name Person responsible for approving costs related to this resource.|Approver|{email}|Yes
@@ -148,7 +150,7 @@ Service Class|Service Level Agreement level of this application, workload, or se
 Start Date of the project|Date when this application, workload, or service was first deployed.|StartDate|{date}|No
 End Date of the Project|Date when this application, workload, or service is planned to be retired.|EndDate|{date}|No
 
-> This module allows you to manage the above metadata tags directly or as a variable using `variables.tf`. All Azure resources which support tagging can be tagged by specifying key-values in argument `tags`. Tag `ResourceName` is added automatically on all resources.
+> This module allows you to manage the above metadata tags directly or as a variable using `variables.tf`. All Azure resources which support tagging can be tagged by specifying key-values in argument `tags`. Tag `ResourceName` is added automatically to all resources.
 
 ```hcl
 module "key-vault" {
