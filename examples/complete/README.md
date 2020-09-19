@@ -6,28 +6,22 @@ Terraform Module to create a Key Vault also adds required access policies for AD
 
 ```hcl
 module "key-vault" {
-  source = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v1.1.0"
+  source  = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v2.0.0"
 
   # Resource Group and Key Vault pricing tier details
-  resource_group_name        = "rg-tieto-internal-shared-westeurope-001"
+  resource_group_name        = "rg-demo-project-shared-westeurope-001"
+  key_vault_name             = "demo-project-shard"
   key_vault_sku_pricing_tier = "premium"
-
-  # (Required) Project_Name, Subscription_type and environment are must to create resource names.
-  # Project name length should be `15` and contian Alphanumerics and hyphens only.
-  project_name      = "tieto-internal"
-  subscription_type = "shared"
-  environment       = "dev"
-
-  # Adding Key valut logs to Azure monitoring and Log Analytics space
-  log_analytics_workspace_id           = var.log_analytics_workspace_id
-  azure_monitor_logs_retention_in_days = var.azure_monitor_logs_retention_in_days
-  storage_account_id                   = var.storage_account_id
 
   # Once `Purge Protection` has been Enabled it's not possible to Disable it
   # Deleting the Key Vault with `Purge Protection` enabled will schedule the Key Vault to be deleted (currently 90 days)
   # Once `Soft Delete` has been Enabled it's not possible to Disable it.
   enable_purge_protection = false
   enable_soft_delete      = false
+
+  # Adding Key valut logs to Azure monitoring and Log Analytics space
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+  storage_account_id         = var.storage_account_id
 
   # Access policies for users, you can provide list of Azure AD users and set permissions.
   # Make sure to use list of user principal names of Azure AD users.
@@ -42,14 +36,14 @@ module "key-vault" {
 
     # Access policies for AD Groups, enable this feature to provide list of Azure AD groups and set permissions.
     {
-      # azure_ad_group_names = ["ADGroupName1", "ADGroupName2"]
-      # secret_permissions   = ["get", "list", "set"]
+      azure_ad_group_names = ["ADGroupName1", "ADGroupName2"]
+      secret_permissions   = ["get", "list", "set"]
     },
   ]
 
   # Create a required Secrets as per your need.
   # When you Add `usernames` with empty password this module creates a strong random password
-  # use .tfvars file to manage the secrets as variables to avoid security issues.
+  # use .tfvars file to manage the secrets to avoid security violations.
   secrets = {
     "message" = "Hello, world!"
     "vmpass"  = ""
@@ -58,7 +52,7 @@ module "key-vault" {
   # Adding TAG's to your Azure resources (Required)
   # ProjectName and Env are already declared above, to use them here or create a varible.
   tags = {
-    ProjectName  = "tieto-internal"
+    ProjectName  = "demo-project"
     Env          = "dev"
     Owner        = "user@example.com"
     BusinessUnit = "CORP"

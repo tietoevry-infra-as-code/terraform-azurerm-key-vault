@@ -95,7 +95,7 @@ data "azurerm_resource_group" "rg" {
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "main" {
-  name                            = lower("kv-${var.project_name}-${var.subscription_type}")
+  name                            = lower("kv-${var.key_vault_name}")
   location                        = data.azurerm_resource_group.rg.location
   resource_group_name             = data.azurerm_resource_group.rg.name
   tenant_id                       = data.azurerm_client_config.current.tenant_id
@@ -106,7 +106,7 @@ resource "azurerm_key_vault" "main" {
   soft_delete_enabled             = var.enable_soft_delete
   purge_protection_enabled        = var.enable_purge_protection
 
-  tags = merge({ "ResourceName" = lower("kv-${var.project_name}-${var.subscription_type}") }, var.tags, )
+  tags = merge({ "ResourceName" = lower("kv-${var.key_vault_name}") }, var.tags, )
 
   dynamic "network_acls" {
     for_each = var.network_acls != null ? [true] : []
@@ -171,17 +171,19 @@ resource "azurerm_monitor_diagnostic_setting" "diag" {
   storage_account_id             = var.storage_account_id
   log {
     category = "AuditEvent"
+    enabled  = true
+
     retention_policy {
-      enabled = true
-      days    = var.azure_monitor_logs_retention_in_days
+      enabled = false
     }
   }
 
   metric {
     category = "AllMetrics"
+    enabled  = true
+
     retention_policy {
-      enabled = true
-      days    = var.azure_monitor_logs_retention_in_days
+      enabled = false
     }
   }
 }

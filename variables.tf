@@ -3,18 +3,8 @@ variable "resource_group_name" {
   default     = ""
 }
 
-variable "project_name" {
-  description = "The name of the project."
-  default     = ""
-}
-
-variable "subscription_type" {
-  description = "Summary description of the purpose of the subscription that contains the resource. Often broken down by deployment environment type or specific workloads"
-  default     = ""
-}
-
-variable "environment" {
-  description = "The stage of the development lifecycle for the workload that the resource supports"
+variable "key_vault_name" {
+  description = "The Name of the key vault"
   default     = ""
 }
 
@@ -40,7 +30,7 @@ variable "enabled_for_template_deployment" {
 
 variable "enable_soft_delete" {
   description = " Should Soft Delete be enabled for this Key Vault?"
-  default     = false
+  default     = true
 }
 
 variable "enable_purge_protection" {
@@ -85,4 +75,3 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
-

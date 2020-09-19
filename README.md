@@ -8,28 +8,22 @@ This Terraform Module creates a Key Vault also adds required access policies for
 
 ```hcl
 module "key-vault" {
-  source = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v1.1.0"
+  source  = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v2.0.0"
 
   # Resource Group and Key Vault pricing tier details
-  resource_group_name        = "rg-tieto-internal-shared-westeurope-001"
+  resource_group_name        = "rg-demo-project-shared-westeurope-001"
+  key_vault_name             = "demo-project-shard"
   key_vault_sku_pricing_tier = "premium"
-
-  # (Required) Project_Name, Subscription_type and environment are must to create resource names.
-  # Project name length should be `15` and contian Alphanumerics and hyphens only.
-  project_name      = "tieto-internal"
-  subscription_type = "shared"
-  environment       = "dev"
-
-  # Adding Key valut logs to Azure monitoring and Log Analytics space
-  log_analytics_workspace_id           = var.log_analytics_workspace_id
-  azure_monitor_logs_retention_in_days = var.azure_monitor_logs_retention_in_days
-  storage_account_id                   = var.storage_account_id
 
   # Once `Purge Protection` has been Enabled it's not possible to Disable it
   # Deleting the Key Vault with `Purge Protection` enabled will schedule the Key Vault to be deleted (currently 90 days)
   # Once `Soft Delete` has been Enabled it's not possible to Disable it.
   enable_purge_protection = false
   enable_soft_delete      = false
+
+  # Adding Key valut logs to Azure monitoring and Log Analytics space
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+  storage_account_id         = var.storage_account_id
 
   # Access policies for users, you can provide list of Azure AD users and set permissions.
   # Make sure to use list of user principal names of Azure AD users.
@@ -44,14 +38,14 @@ module "key-vault" {
 
     # Access policies for AD Groups, enable this feature to provide list of Azure AD groups and set permissions.
     {
-      # azure_ad_group_names = ["ADGroupName1", "ADGroupName2"]
-      # secret_permissions   = ["get", "list", "set"]
+      azure_ad_group_names = ["ADGroupName1", "ADGroupName2"]
+      secret_permissions   = ["get", "list", "set"]
     },
   ]
 
   # Create a required Secrets as per your need.
   # When you Add `usernames` with empty password this module creates a strong random password
-  # use .tfvars file to manage the secrets as variables to avoid security issues.
+  # use .tfvars file to manage the secrets to avoid security violations.
   secrets = {
     "message" = "Hello, world!"
     "vmpass"  = ""
@@ -60,7 +54,7 @@ module "key-vault" {
   # Adding TAG's to your Azure resources (Required)
   # ProjectName and Env are already declared above, to use them here or create a varible.
   tags = {
-    ProjectName  = "tieto-internal"
+    ProjectName  = "demo-project"
     Env          = "dev"
     Owner        = "user@example.com"
     BusinessUnit = "CORP"
@@ -77,15 +71,19 @@ Default action is set to `Allow` when no network rules matched. A `virtual_netwo
 
 ```hcl
 module "key-vault" {
-  source = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v1.1.0"
+  source  = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v2.0.0"
 
   # .... omitted
 
   network_acls = {
     bypass                     = "AzureServices"
     default_action             = "Deny"
-    ip_rules                   = ["123.201.18.148"]  # One or more IP Addresses, or CIDR Blocks to access this Key Vault.
-    virtual_network_subnet_ids = [] # One or more Subnet ID's to access this Key Vault.
+
+    # One or more IP Addresses, or CIDR Blocks to access this Key Vault.
+    ip_rules                   = ["123.201.18.148"]
+
+    # One or more Subnet ID's to access this Key Vault.
+    virtual_network_subnet_ids = []
   }
   
 # ....omitted
@@ -109,11 +107,11 @@ We can configure Azure Disk Encryption to use Azure Key Vault to control and man
 
 When you need to pass a secure value (like a password) as a parameter during deployment, you can retrieve the value from an Azure Key Vault. To access the Key Vault when deploying Managed Applications, you must grant access to the Appliance Resource Provider service principal. This access is enabled by default for this module. Incase you want to disable it set the argument `enabled_for_template_deployment = "false"`.
 
-## Soft Delete and Purge Protection
+## Soft-Delete and Purge Protection
 
 When soft-delete is enabled, resources marked as deleted resources are retained for a specified period (90 days by default). The service further provides a mechanism for recovering the deleted object, essentially undoing the deletion.
 
-When creating a new key vault, soft-delete is enabled by default. You can create a key vault without soft-delete through this module by setting the argument `enable_soft_delete = false`. Once soft-delete is enabled on a key vault it cannot be disabled.
+When creating a new key vault, soft-delete is enabled by default. __The ability to opt out of soft-delete will be deprecated by the end of the year 2020__, and soft-delete protection will automatically be turned on for all key vaults.
 
 Purge protection is an optional Key Vault behavior and is not enabled by default. Purge protection can only be enabled once soft-delete is enabled. It can be turned on using this module by setting the argument `enable_purge_protection = true`.
 
@@ -154,13 +152,12 @@ End Date of the Project|Date when this application, workload, or service is plan
 
 ```hcl
 module "key-vault" {
-  source = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v1.1.0"
-  create_resource_group   = false
+  source  = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v2.0.0"
 
   # ... omitted
 
   tags = {
-    ProjectName  = "tieto-internal"
+    ProjectName  = "demo-project"
     Env          = "dev"
     Owner        = "user@example.com"
     BusinessUnit = "CORP"
@@ -169,14 +166,27 @@ module "key-vault" {
 }  
 ```
 
+## Requirements
+
+Name | Version
+-----|--------
+terraform | >= 0.13
+azurerm | ~> 2.27
+
+## Providers
+
+| Name | Version |
+|------|---------|
+azurerm | ~> 2.27
+random | n/a
+azuread | n/a
+
 ## Inputs
 
 Name | Description | Type | Default
 ---- | ----------- | ---- | -------
 `resource_group_name` | The name of the resource group in which resources are created | string | `""`
-`project_name`|The name of the project|string | `""`
-`subscription_type`|Summary description of the purpose of the subscription that contains the resource. Often broken down by deployment environment type or specific workloads|string | `""`
-`environment`|The stage of the development lifecycle for the workload that the resource supports|list |`{}`
+`key_vault_name`|The name of the key vault|string|`""`
 `key_vault_sku_pricing_tier`|The name of the SKU used for the Key Vault. The options are: `standard`, `premium`.|string|`"standard"`
 `enabled_for_deployment`|Allow Virtual Machines to retrieve certificates stored as secrets from the Key Vault|string|`"false"`
 `enabled_for_disk_encryption`|Allow Disk Encryption to retrieve secrets from the vault and unwrap keys|string|`"false"`
@@ -194,7 +204,6 @@ Name | Description | Type | Default
 `secrets`|A map of secrets for the Key Vault|map| `{}`
 `log_analytics_workspace_id`|The id of log analytic workspace to send logs and metrics.|string|`"null"`
 `storage_account_id`|The id of storage account to send logs and metrics|string|`"null"`
-`azure_monitor_logs_retention_in_days`|The monitor data retention in days|number|`30`
 `Tags`|A map of tags to add to all resources|map|`{}`
 
 ## Outputs
@@ -213,10 +222,9 @@ Name | Description
 
 ## Authors
 
-Module is maintained by [Kumaraswamy Vithanala](mailto:kumaraswamy.vithanala@tieto.com) with the help from other awesome contributors.
+Originally created by [Kumaraswamy Vithanala (Kumar)](mailto:kumaraswamy.vithanala@tieto.com)
 
 ## Other resources
 
 * [Azure Key Vault documentation (Azure Documentation)](https://docs.microsoft.com/en-us/azure/key-vault/)
-
 * [Terraform AzureRM Provider Documentation](https://www.terraform.io/docs/providers/azurerm/index.html)
