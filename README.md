@@ -8,7 +8,8 @@ This Terraform Module creates a Key Vault also adds required access policies for
 
 ```hcl
 module "key-vault" {
-  source  = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v2.0.0"
+  source  = "kumarvna/key-vault/azurerm"
+  version = "2.0.0"
 
   # Resource Group and Key Vault pricing tier details
   resource_group_name        = "rg-demo-project-shared-westeurope-001"
@@ -71,7 +72,8 @@ Default action is set to `Allow` when no network rules matched. A `virtual_netwo
 
 ```hcl
 module "key-vault" {
-  source  = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v2.0.0"
+  source  = "kumarvna/key-vault/azurerm"
+  version = "2.0.0"
 
   # .... omitted
 
@@ -152,7 +154,8 @@ End Date of the Project|Date when this application, workload, or service is plan
 
 ```hcl
 module "key-vault" {
-  source  = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v2.0.0"
+  source  = "kumarvna/key-vault/azurerm"
+  version = "2.0.0"
 
   # ... omitted
 
@@ -177,7 +180,7 @@ azurerm | ~> 2.27
 
 | Name | Version |
 |------|---------|
-azurerm | ~> 2.27
+azurerm | 2.27
 random | n/a
 azuread | n/a
 
@@ -222,7 +225,7 @@ Name | Description
 
 ## Authors
 
-Originally created by [Kumaraswamy Vithanala (Kumar)](mailto:kumaraswamy.vithanala@tieto.com)
+Originally created by [Kumaraswamy Vithanala](mailto:kumaraswamy.vithanala@tieto.com)
 
 ## Other resources
 

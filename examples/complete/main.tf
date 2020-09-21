@@ -1,5 +1,6 @@
 module "key-vault" {
-  source = "github.com/tietoevry-infra-as-code/terraform-azurerm-key-vault?ref=v2.0.0"
+  source  = "kumarvna/key-vault/azurerm"
+  version = "2.0.0"
 
   # Resource Group and Key Vault pricing tier details
   resource_group_name        = "rg-demo-project-shared-westeurope-001"
