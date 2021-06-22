@@ -1,3 +1,5 @@
+> ## This repository is no longer maintained actively. Please visit https://github.com/kumarvna?tab=repositories for the latest updates.
+
 # Azure Key Vault Terraform Module
 
 Azure Key Vault is a tool for securely storing and accessing secrets. A secret is anything that you want to tightly control access to, such as API keys, passwords, or certificates. A vault is a logical group of secrets.
